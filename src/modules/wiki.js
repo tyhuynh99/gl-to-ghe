@@ -1,7 +1,7 @@
 const { migrateRepo } = require('./git');
 const chalk = require('chalk');
 
-async function migrateWiki(project, githubOrg, repoName, gitlabToken, githubToken, tempDir) {
+async function migrateWiki(project, githubOrg, repoName, gitlabToken, githubToken, tempDir, cleanup = true) {
   const wikiName = `${repoName}.wiki`;
   const glWikiUrl = project.http_url_to_repo.replace('.git', '.wiki.git').replace('https://', `https://oauth2:${gitlabToken}@`);
   const ghWikiUrl = `https://x-access-token:${githubToken}@github.com/${githubOrg}/${repoName}.wiki.git`;
@@ -9,7 +9,7 @@ async function migrateWiki(project, githubOrg, repoName, gitlabToken, githubToke
   console.log(chalk.gray(`   > Attempting to migrate Wiki for ${project.name}...`));
 
   try {
-    await migrateRepo(glWikiUrl, ghWikiUrl, wikiName, tempDir);
+    await migrateRepo(glWikiUrl, ghWikiUrl, wikiName, tempDir, cleanup);
     console.log(chalk.green(`   ✔ Wiki migrated successfully`));
   } catch (err) {
     // Wiki might not exist for the project

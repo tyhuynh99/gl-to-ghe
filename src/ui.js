@@ -60,6 +60,21 @@ async function mainCoordinator() {
   }
   const customMapping = loadCustomMapping(userMappingPath);
 
+  const { tempDir, cleanup } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'tempDir',
+      message: 'Temporary Directory for clones:',
+      default: process.env.TEMP_DIR || require('path').join(require('os').tmpdir(), 'migration')
+    },
+    {
+      type: 'confirm',
+      name: 'cleanup',
+      message: 'Cleanup local data after completion?',
+      default: true
+    }
+  ]);
+
   console.log(chalk.green('\n✅ Configuration complete. Starting migration process...\n'));
 
   // 3. Initialize Clients
@@ -102,7 +117,7 @@ async function mainCoordinator() {
         const ghRepoUrl = `https://x-access-token:${process.env.GITHUB_TOKEN}@${process.env.GITHUB_URL.replace('https://api.', '').replace('https://', '')}/${githubOrg}/${repoName}.git`;
         const glRepoUrl = project.http_url_to_repo.replace('https://', `https://oauth2:${process.env.GITLAB_TOKEN}@`);
         
-        await migrateRepo(glRepoUrl, ghRepoUrl, repoName, process.env.TEMP_DIR || '/tmp/migration');
+        await migrateRepo(glRepoUrl, ghRepoUrl, repoName, tempDir, cleanup);
       }
 
       if (modules.includes('variables')) {
@@ -122,7 +137,7 @@ async function mainCoordinator() {
 
       if (modules.includes('wiki')) {
         console.log(chalk.white(`📝 [Wiki] mirroring...`));
-        await migrateWiki(project, githubOrg, repoName, process.env.GITLAB_TOKEN, process.env.GITHUB_TOKEN, process.env.TEMP_DIR || '/tmp/migration');
+        await migrateWiki(project, githubOrg, repoName, process.env.GITLAB_TOKEN, process.env.GITHUB_TOKEN, tempDir, cleanup);
       }
 
       if (modules.includes('pipeline')) {

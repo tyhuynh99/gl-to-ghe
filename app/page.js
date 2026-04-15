@@ -7,7 +7,9 @@ export default function Home() {
     gitlabUrl: '',
     gitlabToken: '',
     githubToken: '',
-    githubOrg: ''
+    githubOrg: '',
+    tempDir: '',
+    cleanup: true
   });
   const [projects, setProjects] = useState([]);
   const [selectedProjects, setSelectedProjects] = useState([]);
@@ -129,6 +131,22 @@ export default function Home() {
                 onChange={(e) => setConfig({...config, githubOrg: e.target.value})}
                 required 
               />
+              <label>Temporary Directory (Optional)</label>
+              <input 
+                type="text" 
+                placeholder="e.g. /tmp/migration or C:\temp" 
+                value={config.tempDir}
+                onChange={(e) => setConfig({...config, tempDir: e.target.value})}
+              />
+              <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', marginBottom: '1rem', fontWeight: 'normal' }}>
+                <input 
+                  type="checkbox" 
+                  checked={config.cleanup}
+                  onChange={(e) => setConfig({...config, cleanup: e.target.checked})}
+                  style={{ width: 'auto', marginBottom: 0, marginRight: '0.5rem' }}
+                />
+                Cleanup local data after completion
+              </label>
               <button type="submit" className="btn-primary" disabled={status === 'loading_projects'}>
                 {status === 'loading_projects' ? 'Connecting...' : 'Connect & Fetch Projects'}
               </button>

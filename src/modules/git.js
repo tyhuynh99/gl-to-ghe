@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const chalk = require('chalk');
 
-async function migrateRepo(gitlabUrl, githubUrl, repoName, tempDir) {
+async function migrateRepo(gitlabUrl, githubUrl, repoName, tempDir, cleanup = true) {
   const repoDir = path.join(tempDir, `${repoName}.git`);
   
   // Ensure temp dir exists
@@ -25,8 +25,10 @@ async function migrateRepo(gitlabUrl, githubUrl, repoName, tempDir) {
     console.error(chalk.red(`   ! Git Migration failed for ${repoName}:`), err.message);
     throw err;
   } finally {
-    // Cleanup - handle with care in production
-    // execSync(`rm -rf "${repoDir}"`);
+    if (cleanup) {
+      console.log(chalk.gray(`   > Cleaning up local repository data...`));
+      fs.rmSync(repoDir, { recursive: true, force: true });
+    }
   }
 }
 

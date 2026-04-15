@@ -6,6 +6,8 @@ import { migrateIssues } from '../../../src/modules/issues';
 import { migrateMRs } from '../../../src/modules/mrs';
 import { migrateWiki } from '../../../src/modules/wiki';
 import { convertPipeline } from '../../../src/modules/pipeline';
+import os from 'os';
+import path from 'path';
 
 // This is an SSE version of the migration handler
 export async function POST(request) {
@@ -23,7 +25,8 @@ export async function POST(request) {
         const gitlab = new GitLabClient(config.gitlabUrl, config.gitlabToken);
         const github = new GitHubClient('https://api.github.com', config.githubToken); // Assuming Cloud
         const githubOrg = config.githubOrg;
-        const tempDir = '/tmp/migration';
+        const tempDir = config.tempDir || path.join(os.tmpdir(), 'migration');
+        const cleanup = config.cleanup !== undefined ? config.cleanup : true;
 
         sendLog(`🚀 Starting migration for ${selectedProjectIds.length} projects...`);
 
@@ -44,7 +47,7 @@ export async function POST(request) {
             
             sendLog(`   > Mirroring git history...`);
             // Note: We need to wrap existing modules to take sendLog as an alternative to console.log
-            await migrateRepo(glRepoUrl, ghRepoUrl, repoName, tempDir);
+            await migrateRepo(glRepoUrl, ghRepoUrl, repoName, tempDir, cleanup);
           }
 
           if (modules.includes('variables')) {
@@ -64,7 +67,7 @@ export async function POST(request) {
 
           if (modules.includes('wiki')) {
             sendLog(`   > Mirroring wiki...`);
-            await migrateWiki(project, githubOrg, repoName, config.gitlabToken, config.githubToken, tempDir);
+            await migrateWiki(project, githubOrg, repoName, config.gitlabToken, config.githubToken, tempDir, cleanup);
           }
 
           sendLog(`✅ Successfully migrated ${project.name}`);
