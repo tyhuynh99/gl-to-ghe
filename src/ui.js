@@ -60,7 +60,7 @@ async function mainCoordinator() {
   }
   const customMapping = loadCustomMapping(userMappingPath);
 
-  const { tempDir, cleanup } = await inquirer.prompt([
+  const { tempDir, cleanup, aiBaseUrl, aiModelName, aiApiKey } = await inquirer.prompt([
     {
       type: 'input',
       name: 'tempDir',
@@ -72,6 +72,24 @@ async function mainCoordinator() {
       name: 'cleanup',
       message: 'Cleanup local data after completion?',
       default: true
+    },
+    {
+      type: 'input',
+      name: 'aiBaseUrl',
+      message: 'AI API Base URL (for Pipeline):',
+      default: process.env.AI_BASE_URL || 'http://localhost:8080/v1'
+    },
+    {
+      type: 'input',
+      name: 'aiModelName',
+      message: 'AI Model Name:',
+      default: process.env.AI_MODEL_NAME || 'gpt-3.5-turbo'
+    },
+    {
+      type: 'password',
+      name: 'aiApiKey',
+      message: 'AI API Key (if any):',
+      default: process.env.AI_API_KEY || ''
     }
   ]);
 
@@ -142,7 +160,7 @@ async function mainCoordinator() {
 
       if (modules.includes('pipeline')) {
         console.log(chalk.white(`📝 [Pipeline] converting .gitlab-ci.yml...`));
-        const ghWorkflow = await convertPipeline(gitlab, project);
+        const ghWorkflow = await convertPipeline(gitlab, project, aiBaseUrl, aiModelName, aiApiKey);
         if (ghWorkflow) {
           // In a real scenario, we would commit this to the GH repo
           // For now, we'll log that it's generated.

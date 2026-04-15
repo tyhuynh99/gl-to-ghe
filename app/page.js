@@ -9,7 +9,10 @@ export default function Home() {
     githubToken: '',
     githubOrg: '',
     tempDir: '',
-    cleanup: true
+    cleanup: true,
+    aiBaseUrl: 'http://localhost:8080/v1',
+    aiModelName: 'gpt-3.5-turbo',
+    aiApiKey: ''
   });
   const [projects, setProjects] = useState([]);
   const [selectedProjects, setSelectedProjects] = useState([]);
@@ -147,6 +150,26 @@ export default function Home() {
                 />
                 Cleanup local data after completion
               </label>
+              <label>AI API Base URL (For Pipeline Migration)</label>
+              <input 
+                type="text" 
+                placeholder="http://localhost:8080/v1" 
+                value={config.aiBaseUrl}
+                onChange={(e) => setConfig({...config, aiBaseUrl: e.target.value})}
+              />
+              <label>AI Model Name</label>
+              <input 
+                type="text" 
+                placeholder="gpt-3.5-turbo" 
+                value={config.aiModelName}
+                onChange={(e) => setConfig({...config, aiModelName: e.target.value})}
+              />
+              <label>AI API Key (Optional)</label>
+              <input 
+                type="password" 
+                value={config.aiApiKey}
+                onChange={(e) => setConfig({...config, aiApiKey: e.target.value})}
+              />
               <button type="submit" className="btn-primary" disabled={status === 'loading_projects'}>
                 {status === 'loading_projects' ? 'Connecting...' : 'Connect & Fetch Projects'}
               </button>

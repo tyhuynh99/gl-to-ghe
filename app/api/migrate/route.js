@@ -27,6 +27,9 @@ export async function POST(request) {
         const githubOrg = config.githubOrg;
         const tempDir = config.tempDir || path.join(os.tmpdir(), 'migration');
         const cleanup = config.cleanup !== undefined ? config.cleanup : true;
+        const aiBaseUrl = config.aiBaseUrl || 'http://localhost:8080/v1';
+        const aiModelName = config.aiModelName || 'gpt-3.5-turbo';
+        const aiApiKey = config.aiApiKey || '';
 
         sendLog(`🚀 Starting migration for ${selectedProjectIds.length} projects...`);
 
@@ -68,6 +71,23 @@ export async function POST(request) {
           if (modules.includes('wiki')) {
             sendLog(`   > Mirroring wiki...`);
             await migrateWiki(project, githubOrg, repoName, config.gitlabToken, config.githubToken, tempDir, cleanup);
+          }
+
+          if (modules.includes('pipeline')) {
+            sendLog(`   > Prompting AI to translate .gitlab-ci.yml...`);
+            const ghWorkflow = await convertPipeline(gitlab, project, aiBaseUrl, aiModelName, aiApiKey);
+            if (ghWorkflow) {
+              sendLog(`   ✔ Generated .github/workflows/migrated-ci.yml`);
+              try {
+                await github.client.put(`/repos/${githubOrg}/${repoName}/contents/.github/workflows/migrated-ci.yml`, {
+                  message: 'Migrate GitLab CI to GitHub Actions via AI',
+                  content: Buffer.from(ghWorkflow).toString('base64'),
+                  branch: project.default_branch || 'main'
+                });
+              } catch (e) {
+                sendLog(`   ! Could not commit workflow: ${e.message}`);
+              }
+            }
           }
 
           sendLog(`✅ Successfully migrated ${project.name}`);
